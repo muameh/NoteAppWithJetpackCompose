@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.mehmetbaloglu.noteappwithjetpackcompose.data.model.Note
 
 
-@Database(entities = [Note::class], version = 1, exportSchema = false)
+@Database(entities = [Note::class], version = 2, exportSchema = false)
 abstract class NoteDB : RoomDatabase() {
     abstract fun noteDao(): NoteDBDao
 }
