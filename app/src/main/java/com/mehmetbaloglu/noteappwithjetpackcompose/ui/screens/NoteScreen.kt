@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mehmetbaloglu.noteappwithjetpackcompose.R
-import com.mehmetbaloglu.noteappwithjetpackcompose.data.dummy_data.NotesDataSource
+
 import com.mehmetbaloglu.noteappwithjetpackcompose.data.model.Note
 
 
@@ -73,15 +73,13 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            TextField(
-                value = title,
+            TextField(value = title,
                 onValueChange = { title = it },
                 label = { Text(text = "Title") },
                 singleLine = true,
                 modifier = Modifier.padding(top = 10.dp)
             )
-            TextField(
-                value = description,
+            TextField(value = description,
                 onValueChange = { description = it },
                 label = { Text(text = "Add a note") },
                 singleLine = true,
@@ -90,7 +88,7 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
             Button(
                 onClick = {
                     if (title.isNotEmpty() && description.isNotEmpty()) {
-                        onAddNote(Note(title = title, description = description))
+                        onAddNote(Note(id=0, title = title, description = description, entryDate = ""))
                         title = ""
                         description = ""
                         Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
@@ -123,9 +121,7 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
 
 @Composable
 fun NoteCard(
-    note: Note,
-    onNoteClicked: (Note) -> Unit = {},
-    onRemoveNote: (Note) -> Unit = {}
+    note: Note, onNoteClicked: (Note) -> Unit = {}, onRemoveNote: (Note) -> Unit = {}
 ) {
     Surface(
         modifier = Modifier
@@ -140,13 +136,11 @@ fun NoteCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
+                Icon(imageVector = Icons.Rounded.Delete,
                     contentDescription = "Icon_Notification",
                     modifier = Modifier
                         .padding(2.dp)
-                        .clickable { onRemoveNote(note) }
-                )
+                        .clickable { onRemoveNote(note) })
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(
                     text = note.title,
@@ -159,12 +153,11 @@ fun NoteCard(
 
             HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
             Text(
-                text = note.description,
-                modifier = Modifier.padding(5.dp)
+                text = note.description, modifier = Modifier.padding(5.dp)
             )
             HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
             Text(
-                text = note.getFormattedDate(),
+                text = "note.getFormattedDate()",
                 modifier = Modifier
                     .padding(5.dp)
                     .align(Alignment.End)
@@ -174,8 +167,3 @@ fun NoteCard(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun NoteScreenPreview() {
-    NoteScreen(NotesDataSource().loadNotes(), onAddNote = {}, onRemoveNote = {})
-}
