@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Create
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.Button
@@ -43,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.mehmetbaloglu.noteappwithjetpackcompose.R
 
 import com.mehmetbaloglu.noteappwithjetpackcompose.data.model.Note
+import com.mehmetbaloglu.noteappwithjetpackcompose.utils.Utils
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,20 +57,7 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
     val context = LocalContext.current
 
     Column(modifier = Modifier.clickable { focusManager.clearFocus() }) {
-        TopAppBar(
-            title = {
-                Text(text = stringResource(id = R.string.app_name))
-            },
-            actions = {
-                Icon(
-                    imageVector = Icons.Rounded.Notifications,
-                    contentDescription = "Icon_Notification"
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xAAAAAAAA), titleContentColor = Color(0xFFFFFFFF)
-            ),
-        )
+        CreateTopAppBar()
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -88,10 +78,19 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
             Button(
                 onClick = {
                     if (title.isNotEmpty() && description.isNotEmpty()) {
-                        onAddNote(Note(id=0, title = title, description = description, entryDate = ""))
+                        onAddNote(
+                            Note(
+                                id=0,
+                                title = title,
+                                description = description,
+                                entryDate = Utils.getCurrentDateTime())
+                        )
                         title = ""
                         description = ""
                         Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
+                    }else{
+                        Toast.makeText(context, "Please enter title and description", Toast.LENGTH_SHORT).show()
+
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
@@ -117,6 +116,26 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
         }
     }
 
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CreateTopAppBar() {
+    TopAppBar(
+        title = {
+            Text(text = stringResource(id = R.string.app_name))
+        },
+        actions = {
+            Icon(
+                imageVector = Icons.Rounded.Create,
+                contentDescription = "Icon_Notification",
+                modifier = Modifier.padding(6.dp).size(30.dp)
+            )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color(0xAAAAAAAA), titleContentColor = Color(0xFFFFFFFF)
+        ),
+    )
 }
 
 @Composable
@@ -150,14 +169,11 @@ fun NoteCard(
                 )
 
             }
-
+            HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
+            Text(text = note.description, modifier = Modifier.padding(5.dp))
             HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
             Text(
-                text = note.description, modifier = Modifier.padding(5.dp)
-            )
-            HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
-            Text(
-                text = "note.getFormattedDate()",
+                text = note.entryDate,
                 modifier = Modifier
                     .padding(5.dp)
                     .align(Alignment.End)

@@ -40,6 +40,5 @@ fun NotesApp(noteViewModel: NoteViewModel){
         onAddNote = {noteViewModel.addNote(it)},
         onRemoveNote = {noteViewModel.deleteNote(it)}
     )
-
 }
 
