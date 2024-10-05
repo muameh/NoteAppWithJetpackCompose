@@ -5,12 +5,12 @@ import java.util.Date
 import java.util.Locale
 
 object Utils {
-       
+
 
     fun getCurrentDateTime(): String {
         val current = Date()  // Şu anki tarihi alır
         val formatter =
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())  // Format belirleme
+            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())  // Format belirleme
         return formatter.format(current)  // Formatlanmış tarihi döndürür
     }
 

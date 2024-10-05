@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,12 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Create
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -39,18 +40,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mehmetbaloglu.noteappwithjetpackcompose.R
-
 import com.mehmetbaloglu.noteappwithjetpackcompose.data.model.Note
 import com.mehmetbaloglu.noteappwithjetpackcompose.utils.Utils
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note) -> Unit) {
+fun NoteScreen(
+    notes: List<Note>,
+    onAddNote: (Note) -> Unit,
+    onEditNote: (Note) -> Unit = {},
+    onRemoveNote: (Note) -> Unit
+) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -80,17 +84,19 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
                     if (title.isNotEmpty() && description.isNotEmpty()) {
                         onAddNote(
                             Note(
-                                id=0,
+                                id = 0,
                                 title = title,
                                 description = description,
-                                entryDate = Utils.getCurrentDateTime())
+                                entryDate = Utils.getCurrentDateTime()
+                            )
                         )
                         title = ""
                         description = ""
                         Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
-                    }else{
-                        Toast.makeText(context, "Please enter title and description", Toast.LENGTH_SHORT).show()
-
+                    } else {
+                        Toast.makeText(
+                            context, "Please enter title and description", Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
@@ -111,11 +117,10 @@ fun NoteScreen(notes: List<Note>, onAddNote: (Note) -> Unit, onRemoveNote: (Note
         HorizontalDivider(modifier = Modifier.padding(20.dp))
         LazyColumn {
             items(notes) {
-                NoteCard(it, onNoteClicked = {}, onRemoveNote = onRemoveNote)
+                NoteCard(it, onRemoveNote = onRemoveNote, onEditNote = onEditNote)
             }
         }
     }
-
 }
 
 @Composable
@@ -129,7 +134,9 @@ private fun CreateTopAppBar() {
             Icon(
                 imageVector = Icons.Rounded.Create,
                 contentDescription = "Icon_Notification",
-                modifier = Modifier.padding(6.dp).size(30.dp)
+                modifier = Modifier
+                    .padding(6.dp)
+                    .size(30.dp)
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -140,18 +147,22 @@ private fun CreateTopAppBar() {
 
 @Composable
 fun NoteCard(
-    note: Note, onNoteClicked: (Note) -> Unit = {}, onRemoveNote: (Note) -> Unit = {}
+    note: Note, onRemoveNote: (Note) -> Unit = {}, onEditNote: (Note) -> Unit = {}
 ) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier
             .padding(10.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { showEditDialog = true },
         shape = RoundedCornerShape(4.dp, 44.dp, 4.dp, 44.dp),
         //color = Color(0xAAFF6500),
         contentColor = Color(0xFF1E3E62),
         border = BorderStroke(1.dp, Color(0xFF0B192C))
     ) {
-        Column(modifier = Modifier.clickable { }) {
+        Column(modifier = Modifier.clickable { showEditDialog = true }) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -159,7 +170,7 @@ fun NoteCard(
                     contentDescription = "Icon_Notification",
                     modifier = Modifier
                         .padding(2.dp)
-                        .clickable { onRemoveNote(note) })
+                        .clickable { showDeleteConfirmation = true })
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(
                     text = note.title,
@@ -173,11 +184,137 @@ fun NoteCard(
             Text(text = note.description, modifier = Modifier.padding(5.dp))
             HorizontalDivider(modifier = Modifier.padding(5.dp, 0.dp, 15.dp, 2.dp))
             Text(
-                text = note.entryDate,
-                modifier = Modifier
+                text = note.entryDate, modifier = Modifier
                     .padding(5.dp)
                     .align(Alignment.End)
             )
+        }
+    }
+    DeleteConfirmationBottomSheet(showSheet = showDeleteConfirmation,
+        onDismiss = { showDeleteConfirmation = false },
+        onConfirm = {
+            onRemoveNote(note)
+            showDeleteConfirmation = false
+        })
+    // Düzenleme penceresi
+    EditNoteDialog(showDialog = showEditDialog,
+        onDismiss = { showEditDialog = false },
+        onConfirm = { updatedNote ->
+            onEditNote(updatedNote)
+            showEditDialog = false
+        },
+        note = note
+    )
+}
+
+
+@Composable
+fun EditNoteDialog(
+    showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (Note) -> Unit, note: Note
+) {
+    var title by remember { mutableStateOf(note.title) }
+    var description by remember { mutableStateOf(note.description) }
+
+    val context = LocalContext.current
+
+    if (showDialog) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(16.dp),
+                color = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Edit Note", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextField(value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextField(value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row {
+                        Button(
+                            onClick = {
+                                if (title.isNotEmpty() && description.isNotEmpty()) {
+                                    val updatedNote = note.copy(
+                                        title = title,
+                                        description = description,
+                                        entryDate = Utils.getCurrentDateTime()
+                                    )
+                                    onConfirm(updatedNote)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please enter title and description",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                            }, modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text(text = "Save")
+                        }
+                        Button(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text(text = "Cancel")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteConfirmationBottomSheet(
+    showSheet: Boolean, onDismiss: () -> Unit, onConfirm: () -> Unit
+) {
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = "Are you sure you want to delete this note?", fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row {
+                    Button(
+                        onClick = onConfirm, modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text(text = "Yes")
+                    }
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text(text = "No")
+                    }
+                }
+            }
         }
     }
 }

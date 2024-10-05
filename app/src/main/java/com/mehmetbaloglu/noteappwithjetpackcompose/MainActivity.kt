@@ -38,7 +38,8 @@ fun NotesApp(noteViewModel: NoteViewModel){
     NoteScreen(
         notes = noteList,
         onAddNote = {noteViewModel.addNote(it)},
-        onRemoveNote = {noteViewModel.deleteNote(it)}
+        onRemoveNote = {noteViewModel.deleteNote(it)},
+        onEditNote = {noteViewModel.updateNote(it)}
     )
 }
 

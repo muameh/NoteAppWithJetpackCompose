@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +21,11 @@ class NoteViewModel @Inject constructor(private val repository: NoteRepository) 
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.getAllNotes().distinctUntilChanged()
+            repository.getAllNotes()
+                .distinctUntilChanged()
+                .map { listOfNotes ->
+                    listOfNotes.sortedByDescending { it.entryDate }
+                }
                 .collect { listOfNotes ->
                     if (listOfNotes.isNullOrEmpty()) {
                         _noteList.value = emptyList()
