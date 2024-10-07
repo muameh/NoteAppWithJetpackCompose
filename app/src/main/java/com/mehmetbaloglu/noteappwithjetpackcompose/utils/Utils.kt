@@ -9,8 +9,7 @@ object Utils {
 
     fun getCurrentDateTime(): String {
         val current = Date()  // Şu anki tarihi alır
-        val formatter =
-            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())  // Format belirleme
+        val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())  // Format belirleme
         return formatter.format(current)  // Formatlanmış tarihi döndürür
     }
 

@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,29 +50,31 @@ import com.mehmetbaloglu.noteappwithjetpackcompose.utils.Utils
 @Composable
 fun NoteScreen(
     notes: List<Note>,
-    onAddNote: (Note) -> Unit,
+    onAddNote: (Note) -> Unit = {},
     onEditNote: (Note) -> Unit = {},
-    onRemoveNote: (Note) -> Unit
+    onRemoveNote: (Note) -> Unit = {}
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
+    //val focusManager = LocalFocusManager.current
     val context = LocalContext.current
 
-    Column(modifier = Modifier.clickable { focusManager.clearFocus() }) {
+    Column(modifier = Modifier) {
         CreateTopAppBar()
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            TextField(value = title,
+            TextField(
+                value = title,
                 onValueChange = { title = it },
                 label = { Text(text = "Title") },
                 singleLine = true,
                 modifier = Modifier.padding(top = 10.dp)
             )
-            TextField(value = description,
+            TextField(
+                value = description,
                 onValueChange = { description = it },
                 label = { Text(text = "Add a note") },
                 singleLine = true,
@@ -147,7 +148,9 @@ private fun CreateTopAppBar() {
 
 @Composable
 fun NoteCard(
-    note: Note, onRemoveNote: (Note) -> Unit = {}, onEditNote: (Note) -> Unit = {}
+    note: Note,
+    onRemoveNote: (Note) -> Unit = {},
+    onEditNote: (Note) -> Unit = {}
 ) {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -190,14 +193,16 @@ fun NoteCard(
             )
         }
     }
+    //Delete note confirmation
     DeleteConfirmationBottomSheet(showSheet = showDeleteConfirmation,
         onDismiss = { showDeleteConfirmation = false },
         onConfirm = {
             onRemoveNote(note)
             showDeleteConfirmation = false
         })
-    // Düzenleme penceresi
-    EditNoteDialog(showDialog = showEditDialog,
+    // Edit note dialog
+    EditNoteDialog(
+        showDialog = showEditDialog,
         onDismiss = { showEditDialog = false },
         onConfirm = { updatedNote ->
             onEditNote(updatedNote)
@@ -210,11 +215,13 @@ fun NoteCard(
 
 @Composable
 fun EditNoteDialog(
-    showDialog: Boolean, onDismiss: () -> Unit, onConfirm: (Note) -> Unit, note: Note
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (Note) -> Unit,
+    note: Note
 ) {
     var title by remember { mutableStateOf(note.title) }
     var description by remember { mutableStateOf(note.description) }
-
     val context = LocalContext.current
 
     if (showDialog) {
@@ -232,13 +239,15 @@ fun EditNoteDialog(
                 ) {
                     Text(text = "Edit Note", fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(value = title,
+                    TextField(
+                        value = title,
                         onValueChange = { title = it },
                         label = { Text("Title") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(value = description,
+                    TextField(
+                        value = description,
                         onValueChange = { description = it },
                         label = { Text("Description") },
                         modifier = Modifier.fillMaxWidth()
@@ -255,6 +264,9 @@ fun EditNoteDialog(
                                         entryDate = Utils.getCurrentDateTime()
                                     )
                                     onConfirm(updatedNote)
+                                    Toast.makeText(context, "Note Updated", Toast.LENGTH_SHORT)
+                                        .show()
+
                                 } else {
                                     Toast.makeText(
                                         context,
@@ -287,6 +299,8 @@ fun EditNoteDialog(
 fun DeleteConfirmationBottomSheet(
     showSheet: Boolean, onDismiss: () -> Unit, onConfirm: () -> Unit
 ) {
+    val context = LocalContext.current
+
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = onDismiss
@@ -302,7 +316,12 @@ fun DeleteConfirmationBottomSheet(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row {
                     Button(
-                        onClick = onConfirm, modifier = Modifier.padding(8.dp)
+                        //onClick = onConfirm,
+                        onClick = {
+                            onConfirm()
+                            Toast.makeText(context, "Note Deleted", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.padding(8.dp)
                     ) {
                         Text(text = "Yes")
                     }
